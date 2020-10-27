@@ -1,0 +1,7 @@
+---
+title: "Original Graphic"
+---
+
+\n This is the original graphic provided by Deseret News \n
+
+![Source: Deseret News](Trump August poll-01.jpg){width=35%}

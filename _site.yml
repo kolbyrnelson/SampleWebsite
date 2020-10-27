@@ -1,0 +1,11 @@
+name: "my-website"
+navbar:
+  left:
+    - text: "Original"
+      href: original.html
+    - text: "Improved"
+      href: improved.html
+output:
+  html_document:
+    theme: flatly
+    highlight: breezedark

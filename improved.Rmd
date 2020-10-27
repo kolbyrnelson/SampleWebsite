@@ -1,0 +1,75 @@
+---
+title: "Improved Graphic\n"
+---
+
+*Code is available upon request, created by Kolby Nelson \n
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(reshape2)
+library(RColorBrewer)
+library(dplyr)
+library(ggthemes)
+library(stringr)
+
+data <- read.csv(file = "TrumpApproval.csv",
+                   header = TRUE, sep = ",", row.names = NULL)
+
+tab<-data # from your path, with read.csv()
+
+mytitle<-"President Donald Trump Job Approval\n"
+mylevels<-c("Strongly Disapprove", "Somewhat Disapprove", "Don't Know", "Somewhat Approve",  "Strongly Approve")
+
+numlevels<-length(tab[1,])-1
+numcenter<-ceiling(numlevels/2)+1
+tab$midvalues<-tab[,numcenter]/2
+tab2<-cbind(tab[,1],tab[,2:ceiling(numlevels/2)],
+            tab$midvalues,tab$midvalues,tab[,numcenter:numlevels+1])
+colnames(tab2)<-c("outcome",mylevels[1:floor(numlevels/2)],"midlow",
+                  "midhigh",mylevels[numcenter:numlevels])
+
+numlevels<-length(mylevels)+1
+point1<-2
+point2<-((numlevels)/2)+1
+point3<-point2+1
+point4<-numlevels+1
+mymin<-(ceiling(max(rowSums(tab2[,point1:point2]))*4)/4)*-100
+mymax<-(ceiling(max(rowSums(tab2[,point3:point4]))*4)/4)*100
+
+numlevels<-length(tab[1,])-1
+temp.rows<-length(tab2[,1])
+pal<-brewer.pal((numlevels-1),"RdBu")
+pal[ceiling(numlevels/2)]<-"#DFDFDF"
+legend.pal<-pal
+pal<-c(pal[1:(ceiling(numlevels/2)-1)], pal[ceiling(numlevels/2)], 
+       pal[ceiling(numlevels/2)], pal[(ceiling(numlevels/2)+1):(numlevels-1)])
+
+tab3<-melt(tab2,id="outcome")
+tab3$col<-rep(pal,each=temp.rows)
+tab3$value<-tab3$value*100
+tab3$outcome<-str_wrap(tab3$outcome, width = 40)
+tab3$outcome<-factor(tab3$outcome, levels = tab2$outcome[order(-(tab2[,5]+tab2[,6]+tab2[,7]))])
+highs<-na.omit(tab3[(length(tab3[,1])/2)+1:length(tab3[,1]),])
+lows<-na.omit(tab3[1:(length(tab3[,1])/2),])
+lows <- lows[rev(rownames(lows)),]
+
+ggplot() +
+  geom_bar(data=highs, aes(y = outcome, x=value, fill=factor(col, levels = legend.pal)),position=position_stack(reverse = TRUE), stat="identity") +
+  geom_bar(data=lows, aes(y = outcome, x=-value, fill=factor(col, levels = legend.pal)), position='stack', stat="identity") +
+  geom_vline(xintercept = 0, color =c("darkgreen")) +
+  scale_fill_identity("", labels = mylevels, breaks=legend.pal, guide="legend") +
+  theme_fivethirtyeight() +
+  coord_flip() +
+  ylab("Percent") +
+  ggtitle(mytitle, subtitle = "The 4th District is harder on the President than state average") +
+  theme(plot.title = element_text(size=18, hjust=0.5, vjust=-8),
+        plot.subtitle = element_text(size=12, hjust=0.5, vjust=-6,face = "italic"),
+        axis.text.x = element_text(size=14, hjust=0.5),
+        axis.text.y = element_text(hjust=0),
+        panel.grid.major.x = element_blank(),
+        legend.position = "right", 
+        legend.direction = "vertical") +
+  guides(fill = guide_legend(reverse=TRUE)) +
+  scale_x_continuous(breaks=seq(mymin,mymax,10), limits=c(mymin,mymax))
+
+```
